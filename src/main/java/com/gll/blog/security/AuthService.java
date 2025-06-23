@@ -2,6 +2,7 @@ package com.gll.blog.security;
 
 import com.gll.blog.entities.UserEntity;
 import com.gll.blog.exceptions.NotFoundException;
+import com.gll.blog.mappers.UserMapper;
 import com.gll.blog.repositories.UserRepository;
 import com.gll.blog.requests.AuthRequest;
 import com.gll.blog.responses.AuthResponse;
@@ -19,8 +20,10 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final AuthenticationManager authManager;
-    private final UserRepository userRepository;
     private final JWTService jwtService;
+
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
@@ -38,14 +41,7 @@ public class AuthService {
             UserEntity userEntity = userRepository.findByEmail(request.email())
                     .orElseThrow(() -> new NotFoundException("Not found user with email: " + request.email()));
 
-            userResponse = new UserResponse(
-                    userEntity.getId(),
-                    userEntity.getRole(),
-                    userEntity.getEmail(),
-                    userEntity.getFirstName(),
-                    userEntity.getLastName(),
-                    userEntity.getDateBirth()
-            );
+            userResponse = userMapper.toResponse(userEntity);
         }
         else {
             log.info("Authentication failed by user {}", request.email());

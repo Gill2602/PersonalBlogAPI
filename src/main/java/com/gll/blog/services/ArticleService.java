@@ -7,6 +7,7 @@ import com.gll.blog.entities.enums.Status;
 import com.gll.blog.exceptions.DataValidityException;
 import com.gll.blog.exceptions.NotFoundException;
 import com.gll.blog.exceptions.UnauthorizedException;
+import com.gll.blog.mappers.ArticleMapper;
 import com.gll.blog.repositories.ArticleRepository;
 import com.gll.blog.repositories.CategoryRepository;
 import com.gll.blog.repositories.UserRepository;
@@ -36,62 +37,34 @@ public class ArticleService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
 
+    private final ArticleMapper articleMapper;
+
     private static final Logger log = LoggerFactory.getLogger(ArticleService.class);
 
     public Page<GlobalArticleResponse> readAllPublicArticle(Pageable pageable) {
-        return articleRepository.findByStatus(Status.PUBLISHED, pageable)
-                .map(article -> new GlobalArticleResponse(
-                        article.getId().toString(),
-                        article.getUser().getEmail(),
-                        article.getTitle(),
-                        article.getContent(),
-                        article.getCategory().getName(),
-                        article.getPublishedAt()
-                ));
+        return articleRepository.findByStatusOrderByPublishedAtDesc(Status.PUBLISHED, pageable)
+                .map(articleMapper::toGlobalResponse);
     }
 
     public Page<AdminArticleResponse> readAllPublicArticleForAdmin(Pageable pageable) {
-        return articleRepository.findByStatus(Status.PUBLISHED, pageable)
-                .map(article -> new AdminArticleResponse(
-                        article.getId().toString(),
-                        article.getUser().getEmail(),
-                        article.getTitle(),
-                        article.getContent(),
-                        article.getCategory().getName(),
-                        article.getPublishedAt(),
-                        article.getCreatedAt(),
-                        article.getUpdatedAt()
-                ));
+        return articleRepository.findByStatusOrderByPublishedAtDesc(Status.PUBLISHED, pageable)
+                .map(articleMapper::toAdminResponse);
     }
 
     public Page<GlobalArticleResponse> readAllUserPublicArticleById(Pageable pageable, UUID id) {
         UserEntity userEntity = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("not found user with ID: " + id));
 
-        return articleRepository.findByUserAndStatus(userEntity, Status.PUBLISHED, pageable)
-                .map(article -> new GlobalArticleResponse(
-                        article.getId().toString(),
-                        userEntity.getEmail(),
-                        article.getTitle(),
-                        article.getContent(),
-                        article.getCategory().getName(),
-                        article.getPublishedAt()
-                ));
+        return articleRepository.findByUserAndStatusOrderByPublishedAtDesc(userEntity, Status.PUBLISHED, pageable)
+                .map(article -> articleMapper.toGlobalResponse(article, userEntity.getEmail()));
     }
 
     public Page<GlobalArticleResponse> readAllUserPublicArticleByEmail(Pageable pageable, String email) {
         UserEntity userEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("not found user with email: " + email));
 
-        return articleRepository.findByUserAndStatus(userEntity, Status.PUBLISHED, pageable)
-                .map(article -> new GlobalArticleResponse(
-                        article.getId().toString(),
-                        userEntity.getEmail(),
-                        article.getTitle(),
-                        article.getContent(),
-                        article.getCategory().getName(),
-                        article.getPublishedAt()
-                ));
+        return articleRepository.findByUserAndStatusOrderByPublishedAtDesc(userEntity, Status.PUBLISHED, pageable)
+                .map(article -> articleMapper.toGlobalResponse(article, userEntity.getEmail()));
     }
 
     public PersonalArticleResponse createDraftArticle(UserDetails user, ArticleRequest request) {
@@ -118,16 +91,7 @@ public class ArticleService {
                 savedArticle.getTitle(), savedArticle.getId(), categoryEntity.getName(), userEntity.getEmail()
         );
 
-        return new PersonalArticleResponse(
-                savedArticle.getId().toString(),
-                savedArticle.getTitle(),
-                savedArticle.getContent(),
-                savedArticle.getStatus(),
-                savedArticle.getCategory().getName(),
-                savedArticle.getPublishedAt(),
-                savedArticle.getCreatedAt(),
-                savedArticle.getUpdatedAt()
-        );
+        return articleMapper.toPersonalResponse(savedArticle);
     }
 
     public PersonalArticleResponse updateArticle(UserDetails user, ArticleRequest request, UUID id) {
@@ -173,16 +137,8 @@ public class ArticleService {
         log.info("updated article with title: {} and ID: {} by user {}",
                 savedArticle.getTitle(), savedArticle.getId(), user.getUsername());
 
-        return new PersonalArticleResponse(
-                savedArticle.getId().toString(),
-                savedArticle.getTitle(),
-                savedArticle.getContent(),
-                savedArticle.getStatus(),
-                savedArticle.getCategory().getName(),
-                savedArticle.getPublishedAt(),
-                savedArticle.getCreatedAt(),
-                savedArticle.getUpdatedAt()
-        );
+        return articleMapper.toPersonalResponse(savedArticle);
+
     }
 
     public Page<PersonalArticleResponse> readAllUserArticle(UserDetails user, Pageable pageable) {
@@ -190,17 +146,8 @@ public class ArticleService {
         UserEntity userEntity = userRepository.findByEmail(user.getUsername())
                 .orElseThrow(() -> new NotFoundException("not found user with email: " + user.getUsername()));
 
-        return articleRepository.findByUser(userEntity, pageable)
-                .map(article -> new PersonalArticleResponse(
-                        article.getId().toString(),
-                        article.getTitle(),
-                        article.getContent(),
-                        article.getStatus(),
-                        article.getCategory().getName(),
-                        article.getPublishedAt(),
-                        article.getCreatedAt(),
-                        article.getUpdatedAt()
-                ));
+        return articleRepository.findByUserOrderByCreatedAtDesc(userEntity, pageable)
+                .map(articleMapper::toPersonalResponse);
     }
 
     public void deleteArticle(UserDetails user, UUID id) {

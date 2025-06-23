@@ -3,10 +3,12 @@ package com.gll.blog.services;
 import com.gll.blog.entities.CategoryEntity;
 import com.gll.blog.exceptions.DataValidityException;
 import com.gll.blog.exceptions.NotFoundException;
+import com.gll.blog.mappers.CategoryMapper;
 import com.gll.blog.repositories.CategoryRepository;
 import com.gll.blog.requests.CategoryRequest;
 import com.gll.blog.responses.CategoryResponse;
 import com.gll.blog.utils.AppUtils;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -15,15 +17,14 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
 
-    private static final Logger log = LoggerFactory.getLogger(CategoryService.class);
+    private final CategoryMapper categoryMapper;
 
-    public CategoryService(final CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
-    }
+    private static final Logger log = LoggerFactory.getLogger(CategoryService.class);
 
     public CategoryResponse createCategory(CategoryRequest request) {
         checkDataValidity(request);
@@ -38,20 +39,12 @@ public class CategoryService {
                 savedCategory.getName(), savedCategory.getId()
         );
 
-        return new CategoryResponse(
-                savedCategory.getId(),
-                savedCategory.getName(),
-                savedCategory.getDescription()
-        );
+        return categoryMapper.toResponse(savedCategory);
     }
 
     public List<CategoryResponse> readAll() {
         return categoryRepository.findAll().stream()
-                .map(category -> new CategoryResponse(
-                        category.getId(),
-                        category.getName(),
-                        category.getDescription()
-                ))
+                .map(categoryMapper::toResponse)
                 .toList();
     }
 
@@ -68,11 +61,7 @@ public class CategoryService {
                 updatedCategory.getName(), updatedCategory.getId()
         );
 
-        return new CategoryResponse(
-                updatedCategory.getId(),
-                updatedCategory.getName(),
-                updatedCategory.getDescription()
-        );
+        return categoryMapper.toResponse(updatedCategory);
     }
 
     public void deleteById(UUID id) {

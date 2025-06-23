@@ -4,10 +4,12 @@ import com.gll.blog.entities.UserEntity;
 import com.gll.blog.entities.enums.Role;
 import com.gll.blog.exceptions.DataValidityException;
 import com.gll.blog.exceptions.NotFoundException;
+import com.gll.blog.mappers.UserMapper;
 import com.gll.blog.repositories.UserRepository;
 import com.gll.blog.requests.UserRequest;
 import com.gll.blog.responses.UserResponse;
 import com.gll.blog.utils.AppUtils;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -20,18 +22,15 @@ import java.time.Period;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+    private final UserMapper userMapper;
 
-    public UserService(final UserRepository userRepository,
-                       final PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     public UserResponse registerStandardUser(UserRequest request) {
 
@@ -51,26 +50,12 @@ public class UserService {
                 savedUser.getEmail(), savedUser.getId()
         );
 
-        return new UserResponse(
-                savedUser.getId(),
-                savedUser.getRole(),
-                savedUser.getEmail(),
-                savedUser.getFirstName(),
-                savedUser.getLastName(),
-                savedUser.getDateBirth()
-        );
+        return userMapper.toResponse(savedUser);
     }
 
     public Page<UserResponse> readAll(Pageable pageable) {
         return userRepository.findAll(pageable)
-                .map(savedUser -> new UserResponse(
-                        savedUser.getId(),
-                        savedUser.getRole(),
-                        savedUser.getEmail(),
-                        savedUser.getFirstName(),
-                        savedUser.getLastName(),
-                        savedUser.getDateBirth()
-                ));
+                .map(userMapper::toResponse);
     }
 
     public UserResponse update(UUID id, UserRequest request) {
@@ -95,14 +80,7 @@ public class UserService {
                 updatedUser.getEmail(), updatedUser.getRole(), updatedUser.getId()
         );
 
-        return new UserResponse(
-                updatedUser.getId(),
-                updatedUser.getRole(),
-                updatedUser.getEmail(),
-                updatedUser.getFirstName(),
-                updatedUser.getLastName(),
-                updatedUser.getDateBirth()
-        );
+        return userMapper.toResponse(updatedUser);
     }
 
     public void deleteById(UUID id) {

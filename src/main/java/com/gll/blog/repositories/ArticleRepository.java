@@ -11,9 +11,9 @@ import java.util.UUID;
 
 public interface ArticleRepository extends JpaRepository<ArticleEntity, UUID> {
 
-    Page<ArticleEntity> findByStatus(Status status, Pageable pageable);
+    Page<ArticleEntity> findByStatusOrderByPublishedAtDesc(Status status, Pageable pageable);
 
-    Page<ArticleEntity> findByUser(UserEntity userEntity, Pageable pageable);
+    Page<ArticleEntity> findByUserOrderByCreatedAtDesc(UserEntity userEntity, Pageable pageable);
 
-    Page<ArticleEntity> findByUserAndStatus(UserEntity userEntity, Status status, Pageable pageable);
+    Page<ArticleEntity> findByUserAndStatusOrderByPublishedAtDesc(UserEntity userEntity, Status status, Pageable pageable);
 }
