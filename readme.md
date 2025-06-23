@@ -1,6 +1,6 @@
 # 📘 Personal Blog
 
-**Personal Blog** is a backend API built in Java with Spring Boot, developed as part of an exercise proposed by [roadmap.sh](https://roadmap.sh/projects/personal-blog).  
+**Personal Blog** is a backend API built in Java with Spring Boot, developed as part of an exercise proposed by [roadmap.sh](https://roadmap.sh/projects/personal-blog) with extra features.  
 It simulates a complete blogging platform with role-based access control, category management, and personal/global article management.
 
 ---
