@@ -1,0 +1,37 @@
+@startuml BlogDB Structure
+
+entity Users {
+    * id : UUID 
+    --
+    * role : ENUM
+    * email : VARCHAR
+    * password :  VARCHAR
+    * first_name : VARCHAR
+    * last_name : VARCHAR
+    * date_birth : DATE
+}
+
+entity Articles {
+    * id : UUID 
+    --
+    * title : VARCHAR
+    * content : TEXT
+    * status : ENUM
+    * publishedAt : DATE
+    * createdAt : DATE
+    * updatedAt : DATE
+    * user_id : BIGINT
+    * category_id : BIGINT
+}
+
+entity Categories {
+    * id : UUID
+    --
+    * name : VARCHAR
+    * description : TEXT
+}
+
+Users ||--o{ Articles
+Articles }o--|| Categories
+
+@enduml
